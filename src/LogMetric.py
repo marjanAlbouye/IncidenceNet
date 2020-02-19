@@ -3,10 +3,6 @@
 
 import numpy as np
 
-__author__ = "Pau Riba, Anjan Dutta"
-__email__ = "priba@cvc.uab.cat, adutta@cvc.uab.cat"
-
-
 def error_ratio(pred, target):
     if type(pred) is not np.ndarray:
         pred = np.array(pred)
