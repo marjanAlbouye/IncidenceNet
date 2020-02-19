@@ -28,7 +28,7 @@ There are two ways to get the processed dataset before start running:
  
  ``` python main.py --mode mode  --target_index target_index --data_path data_path --is_linear is_linear  --is_sym is_sym  --graph_type graph_type```
  
- Arguments:
+ **Arguments:**
  
  ```--mode```: 0 for node-node adjacency and 1 for node-edge
  
