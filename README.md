@@ -22,11 +22,11 @@ There are two ways to get the processed dataset before start running:
 
 ```--adj_type```: for node-node adjency set to "h" and for node-edge set "i"
 
-This script first downloads the raw QM9 dataset from (https://s3-us-west-1.amazonaws.com/deepchem.io/datasets/molnet_publish/qm9.zip) and stores the processed dataset that contains all the adjacecny and node/edge features under data directory.
+This script first downloads the raw QM9 dataset from https://s3-us-west-1.amazonaws.com/deepchem.io/datasets/molnet_publish/qm9.zip and stores the processed dataset that contains all the adjacecny and node/edge features under data directory.
 
 # Training and Evaluation
 
- To train and evaluate the model on a target run the following command at src directory.
+ To train and evaluate the model on a target, run the following command at src directory.
  
  ``` python main.py --mode mode  --target_index target_index --data_path data_path --log_path log_path --is_linear is_linear  --is_sym is_sym  --graph_type graph_type```
  
