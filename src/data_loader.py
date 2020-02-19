@@ -4,10 +4,7 @@ import torch
 from torch.utils.data import DataLoader
 from functools import partial
 import utils
-cuda = torch.device("cuda")
-import gc
-
-
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class CustomDataSet(torch.utils.data.Dataset):
     def __init__(self, dataset):
@@ -49,18 +46,18 @@ def my_collate(batch, mode, is_linear):
 def batch_preprocessing(dataloader):
     batch_processed_data = []
     for i, (feature_tensor, idx, target) in enumerate(dataloader):
-        feature_tensor = feature_tensor.cuda()
+        feature_tensor = feature_tensor.to(device)
         for k, v in idx.items():
-            idx[k] = v.cuda()
-        target = target.cuda()
+            idx[k] = v.to(device)
+        target = target.to(device)
         batch_processed_data.append((feature_tensor, idx, target))
     return batch_processed_data
 
 
 def setup_data_loader(data_path, batch_size=32, mode=0, is_linear=False):
-    train_molecules = np.load(data_path+'/train.npy')
-    val_molecules = np.load(data_path+'/valid.npy')
-    test_molecules = np.load(data_path+'/test.npy')
+    train_molecules = np.load(data_path+'/train.npy', allow_pickle=True)
+    val_molecules = np.load(data_path+'/valid.npy', allow_pickle=True)
+    test_molecules = np.load(data_path+'/test.npy', allow_pickle=True)
     info = np.load(data_path + '/info.npy')
     train_dataset = CustomDataSet(train_molecules)
     valid_dataset = CustomDataSet(val_molecules)
@@ -69,8 +66,8 @@ def setup_data_loader(data_path, batch_size=32, mode=0, is_linear=False):
     valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=True, num_workers=5, collate_fn=partial(my_collate, mode=mode, is_linear=is_linear))
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=5, collate_fn=partial(my_collate, mode=mode, is_linear=is_linear))
 
-    # for batch handeling, we flatten the batch dimension and adjust the indices of adjacency matrices accordingly
+    # we flatten the batch dimension and adjust the indices of adjacency matrices accordingly
     train_batch_data = batch_preprocessing(train_dataloader)
     valid_batch_data = batch_preprocessing(valid_dataloader)
     test_batch_data = batch_preprocessing(test_dataloader)
-    return train_batch_data, valid_batch_data, test_batch_data, torch.tensor(info, device=cuda)
+    return train_batch_data, valid_batch_data, test_batch_data, torch.tensor(info).to(device)

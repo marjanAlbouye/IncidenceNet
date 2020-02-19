@@ -2,9 +2,8 @@ import torch.nn as nn
 import torch
 import geometric_layer
 import numpy as np
-import torch.nn.functional as F
-cuda = torch.device("cuda")
-import pdb
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 class ChannelDropout(nn.Module):
     def __init__(self, p=0.5):
@@ -16,7 +15,7 @@ class ChannelDropout(nn.Module):
         if self.training:
             (S, K) = x.shape
             u = np.random.binomial(1, 1-self.p, size=K)
-            u_tensor = torch.tensor(np.repeat(u.reshape(1, K), S, axis=0).reshape(S, K), dtype=torch.float, device=cuda)
+            u_tensor = torch.tensor(np.repeat(u.reshape(1, K), S, axis=0).reshape(S, K), dtype=torch.float).to(device)
             return (x*u_tensor) / (1-self.p)
         else:
             return x

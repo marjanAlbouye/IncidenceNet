@@ -1,16 +1,11 @@
 import numpy as np
-
+from functools import partial
 import os.path as osp
 import os
 import argparse
 import torch
-from torch.nn import Sequential, Linear, ReLU
-import torch.nn.functional as F
-from torch_scatter import scatter_mean
 from torch_geometric.datasets import QM9
 import torch_geometric.transforms as T
-from torch_geometric.nn import NNConv
-from k_gnn import TwoMalkin, ConnectedThreeMalkin
 
 
 def make_complete_graph(edge_index, edge_features, num_nodes):
@@ -30,7 +25,7 @@ def make_complete_graph(edge_index, edge_features, num_nodes):
 
 
 
-def mycollate(batch):
+def mycollate(batch, graph_type='dense', adj_type='i'):
     data = batch[0]
     keys = set(data.keys)
     n = data.num_nodes
@@ -42,21 +37,29 @@ def mycollate(batch):
         node_features = torch.cat((data['pos'], data['x']), dim=1)
     if 'edge_attr' in keys:
         edge_features = data['edge_attr']
-        comp_edge_index, comp_edge_features = make_complete_graph(edge_index, edge_features, n)
-    custom_graph = CustomGraph(comp_edge_index, label, data.num_nodes, comp_edge_features.shape[0], node_feat=node_features,
-                               edge_feat=comp_edge_features)
-    graph_dict = {
-        'incident': custom_graph.i_adj,
-        'incident_features': custom_graph.i_features,
-        'edge_neigh': custom_graph.edge_neighbors,
-        'labels': custom_graph.label
-    }
-
+        if graph_type == 'dense':
+            edge_index, edge_features = make_complete_graph(edge_index, edge_features, n)
+    custom_graph = CustomGraph(edge_index, label, data.num_nodes, edge_features.shape[0], node_feat=node_features,
+                               edge_feat=edge_features, adj_type=adj_type)
+    if adj_type == 'i':
+        graph_dict = {
+            'incident': custom_graph.i_adj,
+            'incident_features': custom_graph.i_features,
+            'edge_neigh': custom_graph.edge_neighbors,
+            'labels': custom_graph.label
+        }
+    else:
+        graph_dict = {
+            'incident': custom_graph.h_adj,
+            'incident_features': custom_graph.h_features,
+            'edge_neigh': custom_graph.edge_neighbors,
+            'labels': custom_graph.label
+        }
     return graph_dict
 
 
 class CustomGraph(object):
-    def __init__(self, edge_index, label, num_nodes, num_edges, node_feat=None, edge_feat=None):
+    def __init__(self, edge_index, label, num_nodes, num_edges, node_feat=None, edge_feat=None, adj_type='i'):
         self.edge_index = edge_index
         self.label = label
         self.num_nodes = num_nodes
@@ -68,9 +71,11 @@ class CustomGraph(object):
             self.node_dim = self.node_feat.shape[1]
         if not self.edge_feat is None:
             self.edge_dim = self.edge_feat.shape[1]
+        if adj_type == 'i':
+            self.i_adj, self.i_features, self.edge_neighbors = self.get_inhomo_data()
+        else:
+            self.h_adj, self.h_features = self.get_homo_data()
 
-        #self.h_adj, self.h_features = self.get_homo_data()
-        self.i_adj, self.i_features, self.edge_neighbors = self.get_inhomo_data()
 
     def get_homo_data(self):
         adjacency = torch.zeros(self.num_nodes, self.num_nodes, dtype=torch.long)
@@ -168,41 +173,32 @@ class CustomGraph(object):
         return incident, incident_features, edge_neighbors
 
 
-
-def process_dataset(data_loader, mode='train'):
-
+def process_dataset(data_loader, output_dir,  mode='train'):
     molecule_list = []
-    print(mode)
+    print('Preparing {0} data...'.format(mode))
     for i, graph_dict in enumerate(data_loader):
-        print(i)
         molecule_list.append(graph_dict)
-    print('saving file ...')
-    directory = '../data/new_qm9_dense_i/'
-    if not os.path.exists(directory):
-       os.makedirs(directory)
-    np.save(directory + mode, molecule_list)
-
-
-
-class MyFilter(object):
-    def __call__(self, data):
-        return data.num_nodes > 6  # Remove graphs with less than 6 nodes.
-
+    print('Saving {0} data...'.format(mode))
+    if not os.path.exists(output_dir):
+       os.makedirs(output_dir)
+    fp = os.path.join(output_dir, mode)
+    np.save(fp, molecule_list)
+    print('Files saved to {}'.format(fp))
 
 
 class MyTransform(object):
     def __call__(self, data):
-        data.y = data.y  # Specify target: 0 = mu
+        data.y = data.y
         return data
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--target', default=0)
+parser.add_argument('--graph_type', type=str, default="sparse")
+parser.add_argument('--adj_type', type=str, default="i")
+parser.add_argument('--output_path', type=str, default="../data")
 args = parser.parse_args()
-target = int(args.target)
 
-print('---- Target: {} ----'.format(target))
-
+output_dir = os.path.join(args.output_path, 'qm9_{}_{}'.format(args.graph_type, args.adj_type))
 path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'data', '1-QM9')
 dataset = QM9(path, transform=T.Compose([MyTransform(), T.Distance()]))
 
@@ -218,15 +214,15 @@ test_dataset = dataset[:tenpercent]
 val_dataset = dataset[tenpercent:2 * tenpercent]
 train_dataset = dataset[2 * tenpercent:]
 
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, collate_fn=mycollate, num_workers=4, pin_memory=True)
-val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=1, collate_fn=mycollate, num_workers=4, pin_memory=True)
-train_loader = torch.utils.data.DataLoader(train_dataset, shuffle=True, batch_size=1, collate_fn=mycollate,  num_workers=4, pin_memory=True)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, collate_fn=partial(mycollate, graph_type=args.graph_type, adj_type=args.adj_type), num_workers=4, pin_memory=True)
+val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=1, collate_fn=partial(mycollate, graph_type=args.graph_type, adj_type=args.adj_type), num_workers=4, pin_memory=True)
+train_loader = torch.utils.data.DataLoader(train_dataset, shuffle=True, batch_size=1, collate_fn=partial(mycollate, graph_type=args.graph_type, adj_type=args.adj_type),  num_workers=4, pin_memory=True)
 
-process_dataset(train_loader, mode='train')
-process_dataset(val_loader, mode='valid')
-process_dataset(test_loader, mode='test')
-np.save('../data/new_qm9_dense_i/' + 'info', std)
-print('done!')
+process_dataset(train_loader, output_dir, mode='train')
+process_dataset(val_loader, output_dir, mode='valid')
+process_dataset(test_loader, output_dir, mode='test')
+np.save(os.path.join(output_dir,'info') , std)
+print('Done!')
 
 
 

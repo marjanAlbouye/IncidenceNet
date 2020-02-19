@@ -8,22 +8,16 @@ import model
 import data_loader
 from LogMetric import AverageMeter
 import utils
-
-from tqdm import tqdm
-from random import shuffle
 import random
 import numpy as np
 import time
 import datetime
 import argparse
 
-
-
-validation_freq = 3
-save_freq = 5
-in_dim = 21
+in_dim = 22
 out_dim = 1
 cuda = torch.device("cuda")
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 class Qm9Trainer(object):
@@ -49,10 +43,10 @@ class Qm9Trainer(object):
 
         # Setup the model
         self.model = model.Regressor(in_dim=in_dim, hidden_dim=self.hidden_dim, out_dim=out_dim,
-                                     num_layers=self.num_layers, mode=self.mode, is_linear=self.is_linear, is_sym=self.is_sym).cuda()
-        self.model = nn.DataParallel(self.model).to(cuda)
+                                     num_layers=self.num_layers, mode=self.mode, is_linear=self.is_linear, is_sym=self.is_sym).to(device)
+        self.model = nn.DataParallel(self.model).to(device)
 
-        self.L = nn.MSELoss().cuda()
+        self.L = nn.MSELoss().to(device)
         self.optimizer = optim.Adam([{'params': self.model.parameters()}], lr=self.learning_rate, weight_decay=self.reg)
 
         self.evaluation = lambda output, target: torch.mean(torch.abs(output - target))
@@ -187,18 +181,18 @@ if __name__ == '__main__':
         print("Let's use", torch.cuda.device_count(), "GPUs!")
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=1000)
-    parser.add_argument('--batch_size', type=int, default=5)
+    parser.add_argument('--batch_size', type=int, default=256)
     parser.add_argument('--lr', type=float, default=1e-3)
-    parser.add_argument('--hidden', type=int, default=30)
-    parser.add_argument('--layers', type=int, default=3)
-    parser.add_argument('--mode', type=int, default=0)
+    parser.add_argument('--hidden', type=int, default=128)
+    parser.add_argument('--layers', type=int, default=10)
+    parser.add_argument('--mode', type=int, default=1, help="0 for homogeneous adjacency and 1 for inhomogeneous ")
     parser.add_argument('--reg', type=float, default=1e-5)
-    parser.add_argument('--target_index', type=int, default=0)
-    parser.add_argument('--log_path', type=str, default='../results/homo_checkpoints/t0_mu/')
-    parser.add_argument('--data_path', type=str, default='../data/qm9_dense_h')
+    parser.add_argument('--target_index', type=int, default=0, help="index of molecular targets")
+    parser.add_argument('--log_path', type=str, default='../results/inhomo_checkpoints/t0_mu/', help="need to make sure it matches the target_index")
+    parser.add_argument('--data_path', type=str, default='../data/qm9_sparse_i', help="path to data, need to make sure it matches the mode")
     parser.add_argument('--is_linear', type=int, default=0)
     parser.add_argument('--is_sym', type=int, default=0)
-    parser.add_argument('--graph_type', type=str, default='dense')
+    parser.add_argument('--graph_type', type=str, default='sparse')
 
     args = parser.parse_args()
 

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import math
 
-cuda = torch.device("cuda")
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 class GeometricLayer(nn.Module):
@@ -39,7 +39,7 @@ class GeometricLayer(nn.Module):
         (input_layer, idx) = X
         (S, k) = input_layer.shape
 
-        output = torch.zeros(S, self.out_dim, device=cuda)
+        output = torch.zeros(S, self.out_dim).to(device)
 
         if self.mode == 1:
 
@@ -164,7 +164,7 @@ class GeometricLayer(nn.Module):
     def pool(self, X, idx, norm_idx):
         (_, k) = X.shape
         n_segments = int((torch.max(idx) + 1).item())
-        pooled_output = torch.zeros(n_segments, k, device=cuda)
+        pooled_output = torch.zeros(n_segments, k).to(device)
         pooled_output = pooled_output.index_add(0, idx, X)
         try:
             mean_pooled_output = torch.div(pooled_output, norm_idx.view(norm_idx.shape[0], 1))
@@ -182,7 +182,7 @@ class GeometricLayer(nn.Module):
 
     def broadcast_diag(self, X, idx, shape):
         (_, k) = X.shape
-        out = torch.zeros(shape, device=cuda)
+        out = torch.zeros(shape).to(device)
         idx_0 = idx.shape[0]
         broadcast_idx_tensor_expanded = idx.view(idx_0, 1).expand(idx_0, k)
 

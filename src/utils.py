@@ -1,22 +1,10 @@
 from collections import defaultdict
 import numpy as np
 import torch
-import datetime
+import networkx as nx
 import shutil
 import os
-cuda = torch.device("cuda")
-
-
-class MoleculeObj(object):
-    def __init__(self, original_adj, node_features, edge_features):
-        self.original_adj = original_adj
-        self.edge_features = edge_features
-        self.node_features = node_features
-        self.graph = nx.from_numpy_matrix(self.original_adj)
-        self.edge_pairs = self.get_edge_pairs()
-        self.node_adj, self.adj_features = self.get_adj_features()
-        self.incident, self.incident_features = self.get_incident_features()
-
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # this function flattens the batch and adjusts the indices needed for future operations
 def get_indices(adjacency_list, edge_neighbor=None):
@@ -34,7 +22,6 @@ def get_indices(adjacency_list, edge_neighbor=None):
         idx['n2'].append(N2)
         if edge_neighbor is not None:
             idx['edge_neigh'].extend(edge_neighbor[i] + (shift_N2 + 1))
-
 
         t = np.array([], dtype=np.int32)
         for j in range(adj.shape[0]):
@@ -73,41 +60,6 @@ def get_indices(adjacency_list, edge_neighbor=None):
     return idx_tensor
 
 
-def data_prep(dataset):
-    atom_types = 4
-    edge_types = 4
-    atom_types_dict = {6: 0,
-                       7: 1,
-                       8: 2,
-                       9: 3}
-
-    molecule_lists = []
-    for index, [atom, adj, labels] in enumerate(dataset):
-        print(index)
-        if len(atom) == 1:
-            continue
-        full_adj = np.any(adj, axis=0).astype(int)
-        N = adj.shape[1]
-        bond_dim = adj.shape[0]
-        edge_features = np.zeros((N, N, bond_dim))
-        for i, bond_adj in enumerate(adj):
-            edge_idx = np.nonzero(bond_adj)
-            edge_features[edge_idx[0], edge_idx[1], i] = 1
-
-        node_labels = [atom_types_dict[a] for a in atom]
-        node_features = np.zeros((N, atom_types))
-        node_features[np.arange(N), node_labels] = 1
-        mol = MoleculeObj(full_adj, node_features, edge_features)
-        molecule_dict = {
-            'adjacency': mol.node_adj,
-            'adj_features': mol.adj_features,
-            'incident': mol.incident,
-            'incident_features': mol.incident_features,
-            'labels': labels
-        }
-        molecule_lists.append(molecule_dict)
-    np.save('qm9_processed', molecule_lists)
-
 def save_checkpoint(state, is_best, directory):
 
     if not os.path.isdir(directory):
@@ -120,7 +72,7 @@ def save_checkpoint(state, is_best, directory):
 
 
 def rotate_z(theta, x):
-    theta = torch.tensor(theta).cuda().unsqueeze(0)
+    theta = torch.tensor(theta).to(device).unsqueeze(0)
     outz = x[:, 2].unsqueeze(1)
     sin_t = torch.sin(theta)
     cos_t = torch.cos(theta)
