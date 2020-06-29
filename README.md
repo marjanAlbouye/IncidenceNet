@@ -1,5 +1,6 @@
 # Incidence Networks for Geometric Deep Learning
-This is a pytorch implementation of the Incidence Networks for Geometric Deep Learning paper. (Submitted to ICML 2020)
+This is a pytorch implementation of "Incidence Networks for Geometric Deep Learning" paper. (Accepted to ICML 2020) 
+Link to paper: https://arxiv.org/pdf/1905.11460.pdf
 
 # Requirements:
  - `numpy==1.17.4`
@@ -10,7 +11,7 @@ This is a pytorch implementation of the Incidence Networks for Geometric Deep Le
 
 There are two ways to get the processed dataset before start running:
 
-1- Download the dataset from https://figshare.com/s/dad7db4fa42cb6f0fdd2 and save it under data direcotry. Note that this link only contains one version of processed dataset. If you want to train all different configurations of the models we tried, you need to run the script to prepare datasets. (details are given in option 2)
+1- Download the dataset from (link to be added) and save it under data direcotry. Note that this link only contains one version of processed dataset. If you want to train all different configurations of the models we tried, you need to run the script to prepare datasets. (details are given in option 2)
 
 2- Run the following command at data_prep directory.
 
