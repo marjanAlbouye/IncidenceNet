@@ -1,10 +1,8 @@
 from collections import defaultdict
 import numpy as np
 import torch
-import networkx as nx
 import shutil
 import os
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # this function flattens the batch and adjusts the indices needed for future operations
 def get_indices(adjacency_list, edge_neighbor=None):
@@ -71,7 +69,7 @@ def save_checkpoint(state, is_best, directory):
         shutil.copyfile(checkpoint_file, best_model_file)
 
 
-def rotate_z(theta, x):
+def rotate_z(theta, x, device):
     theta = torch.tensor(theta).to(device).unsqueeze(0)
     outz = x[:, 2].unsqueeze(1)
     sin_t = torch.sin(theta)

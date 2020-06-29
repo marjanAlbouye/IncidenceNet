@@ -1,10 +1,9 @@
-import networkx as nx
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from functools import partial
 import utils
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 class CustomDataSet(torch.utils.data.Dataset):
     def __init__(self, dataset):
@@ -43,7 +42,7 @@ def my_collate(batch, mode, is_linear):
     return feature_tensor,idx, labels_tensor
 
 
-def batch_preprocessing(dataloader):
+def batch_preprocessing(dataloader, device):
     batch_processed_data = []
     for i, (feature_tensor, idx, target) in enumerate(dataloader):
         feature_tensor = feature_tensor.to(device)
@@ -54,11 +53,10 @@ def batch_preprocessing(dataloader):
     return batch_processed_data
 
 
-def setup_data_loader(data_path, batch_size=32, mode=0, is_linear=False):
+def setup_data_loader(data_path, device, batch_size=32, mode=0, is_linear=False):
     train_molecules = np.load(data_path+'/train.npy', allow_pickle=True)
     val_molecules = np.load(data_path+'/valid.npy', allow_pickle=True)
     test_molecules = np.load(data_path+'/test.npy', allow_pickle=True)
-    info = np.load(data_path + '/info.npy')
     train_dataset = CustomDataSet(train_molecules)
     valid_dataset = CustomDataSet(val_molecules)
     test_dataset = CustomDataSet(test_molecules)
@@ -67,7 +65,7 @@ def setup_data_loader(data_path, batch_size=32, mode=0, is_linear=False):
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=5, collate_fn=partial(my_collate, mode=mode, is_linear=is_linear))
 
     # we flatten the batch dimension and adjust the indices of adjacency matrices accordingly
-    train_batch_data = batch_preprocessing(train_dataloader)
-    valid_batch_data = batch_preprocessing(valid_dataloader)
-    test_batch_data = batch_preprocessing(test_dataloader)
-    return train_batch_data, valid_batch_data, test_batch_data, torch.tensor(info).to(device)
+    train_batch_data = batch_preprocessing(train_dataloader, device)
+    valid_batch_data = batch_preprocessing(valid_dataloader, device)
+    test_batch_data = batch_preprocessing(test_dataloader, device)
+    return train_batch_data, valid_batch_data, test_batch_data

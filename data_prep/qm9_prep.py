@@ -1,3 +1,4 @@
+# some parts taken from
 import numpy as np
 from functools import partial
 import os.path as osp
@@ -21,7 +22,6 @@ def make_complete_graph(edge_index, edge_features, num_nodes):
         comp_edge_features[index, :] = edge_features[i]
 
     return torch.tensor(comp_edges.transpose()), comp_edge_features
-
 
 
 
@@ -195,7 +195,7 @@ class MyTransform(object):
 parser = argparse.ArgumentParser()
 parser.add_argument('--graph_type', type=str, default="sparse")
 parser.add_argument('--adj_type', type=str, default="i")
-parser.add_argument('--output_path', type=str, default="../data")
+parser.add_argument('--output_path', type=str, default="../sample_data")
 args = parser.parse_args()
 
 output_dir = os.path.join(args.output_path, 'qm9_{}_{}'.format(args.graph_type, args.adj_type))

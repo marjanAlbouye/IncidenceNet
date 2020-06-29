@@ -2,14 +2,13 @@ import torch
 import torch.nn as nn
 import math
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 
 class GeometricLayer(nn.Module):
-    def __init__(self, in_dim, out_dim, activation=nn.Tanh, mode=0, adj_op=9, incident_op=4, bias_num=2, is_linear=False, is_sym=False):
+    def __init__(self, in_dim, out_dim, device, activation=nn.Tanh, mode=0, adj_op=9, incident_op=4, bias_num=2, is_linear=False, is_sym=False):
         super(GeometricLayer, self).__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
+        self.device = device
         self.activation = activation
         self.mode = mode
         self.adj_op = adj_op
@@ -39,7 +38,7 @@ class GeometricLayer(nn.Module):
         (input_layer, idx) = X
         (S, k) = input_layer.shape
 
-        output = torch.zeros(S, self.out_dim).to(device)
+        output = torch.zeros(S, self.out_dim).to(self.device)
 
         if self.mode == 1:
 
@@ -145,6 +144,7 @@ class GeometricLayer(nn.Module):
                 # OP 14: broadcast diag to row + broadcast diag to col
                 output += self.broadcast(torch.matmul(diagonal, self.weights[13]), idx['col'])
                 output += self.broadcast(torch.matmul(diagonal, self.weights[14]), idx['row'])
+                output += self.broadcast(torch.matmul(diagonal, self.weights[14]), idx['row'])
 
         # expand_bias0 = self.bias[0].view(1, self.out_dim).expand(S, self.out_dim)
         # bias_diag = self.broadcast_diag(expand_bias0, idx['diag'], output.shape)
@@ -164,7 +164,7 @@ class GeometricLayer(nn.Module):
     def pool(self, X, idx, norm_idx):
         (_, k) = X.shape
         n_segments = int((torch.max(idx) + 1).item())
-        pooled_output = torch.zeros(n_segments, k).to(device)
+        pooled_output = torch.zeros(n_segments, k).to(self.device)
         pooled_output = pooled_output.index_add(0, idx, X)
         try:
             mean_pooled_output = torch.div(pooled_output, norm_idx.view(norm_idx.shape[0], 1))
@@ -182,7 +182,7 @@ class GeometricLayer(nn.Module):
 
     def broadcast_diag(self, X, idx, shape):
         (_, k) = X.shape
-        out = torch.zeros(shape).to(device)
+        out = torch.zeros(shape).to(self.device)
         idx_0 = idx.shape[0]
         broadcast_idx_tensor_expanded = idx.view(idx_0, 1).expand(idx_0, k)
 
