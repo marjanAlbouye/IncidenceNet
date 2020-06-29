@@ -1,4 +1,4 @@
-# some parts taken from
+# some parts taken from https://github.com/chrsmrrs/k-gnn
 import numpy as np
 from functools import partial
 import os.path as osp
@@ -177,6 +177,7 @@ def process_dataset(data_loader, output_dir,  mode='train'):
     molecule_list = []
     print('Preparing {0} data...'.format(mode))
     for i, graph_dict in enumerate(data_loader):
+        # print(i)
         molecule_list.append(graph_dict)
     print('Saving {0} data...'.format(mode))
     if not os.path.exists(output_dir):

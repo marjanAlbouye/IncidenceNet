@@ -15,7 +15,7 @@ import time
 import datetime
 import argparse
 
-in_dim = 22
+in_dim = 21
 out_dim = 1
 
 

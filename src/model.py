@@ -1,6 +1,7 @@
 import torch.nn as nn
 import geometric_layer
 
+
 class Regressor(nn.Module):
     def __init__(self, in_dim, hidden_dim, out_dim, num_layers, device, activation=nn.ReLU(), mode=0, is_linear=False, is_sym=False, dropout=0.6):
         super(Regressor, self).__init__()
@@ -26,8 +27,6 @@ class Regressor(nn.Module):
             self.layers.append(L2)
         L3 = geometric_layer.GeometricLayer(self.hidden_dim, self.out_dim, self.device, mode=self.mode, is_linear=self.is_linear, is_sym=self.is_sym)
         self.layers.append(L3)
-
-        print(self)
 
     def forward(self, X_input):
         (input_layer, idx) = X_input
