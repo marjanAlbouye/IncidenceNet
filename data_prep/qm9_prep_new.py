@@ -1,4 +1,6 @@
+# Testing a new qm9 preprocessor (not final)
 # some parts taken from https://github.com/chrsmrrs/k-gnn
+# This is NOT the preprocessing code used for creating experiment datasets
 import numpy as np
 from functools import partial
 import os.path as osp
