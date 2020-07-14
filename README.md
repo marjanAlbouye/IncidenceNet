@@ -15,9 +15,7 @@ There are two ways to get the processed dataset before start running:
 
 1- Download the dataset from (link to be added) and save it under data direcotry. Note that this link only contains one version of processed dataset. If you want to train all different configurations of the models we tried, you need to run the script to prepare datasets. (details are given in option 2)
 
-2- Run the following command at data_prep directory.
-
-```python qm9_prep.py --graph_type graph_type --adj_type adj_type```
+2- Run `qm9_prep_main.py` from data_prep directory.
 
 **Arguments:**
 
