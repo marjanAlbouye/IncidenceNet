@@ -5,7 +5,9 @@ Link to paper: https://arxiv.org/pdf/1905.11460.pdf
 # Requirements:
  - `numpy==1.17.4`
  - `torch==1.4.0`
- - `torch_geometric==1.4.2` (https://github.com/rusty1s/pytorch_geometric)
+ - `chainer_chemistry`
+ - `rdkit`
+ - (optional) `torch_geometric==1.4.2` (https://github.com/rusty1s/pytorch_geometric)
 
 # Dataset prepration
 
