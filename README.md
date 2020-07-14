@@ -13,9 +13,10 @@ Link to paper: https://arxiv.org/pdf/1905.11460.pdf
 
 There are two ways to get the processed dataset before start running:
 
-1- Download the dataset from (link to be added) and save it under data direcotry. Note that this link only contains one version of processed dataset. If you want to train all different configurations of the models we tried, you need to run the script to prepare datasets. (details are given in option 2)
-
-2- Run `qm9_prep_main.py` from data_prep directory.
+1- Download the dataset from the following links and save it under data direcotry.
+ https://figshare.com/articles/dataset/qm9_complete_inhomo_zip/12649757 (dense graph)
+ https://figshare.com/articles/dataset/Processed_QM9_sparse_/12649790 (sparse graph)
+2- Run `qm9_prep_main.py` from data_prep directory. (It takes a bit time to process data)
 
 **Arguments:**
 
