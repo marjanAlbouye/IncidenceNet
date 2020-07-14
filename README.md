@@ -14,17 +14,11 @@ Link to paper: https://arxiv.org/pdf/1905.11460.pdf
 There are two ways to get the processed dataset before start running:
 
 1- Download the dataset from the following links and save it under data direcotry.
+
  https://figshare.com/articles/dataset/qm9_complete_inhomo_zip/12649757 (dense graph)
  https://figshare.com/articles/dataset/Processed_QM9_sparse_/12649790 (sparse graph)
+ 
 2- Run `qm9_prep_main.py` from data_prep directory. (It takes a bit time to process data)
-
-**Arguments:**
-
-```--graph_type```: "sparse" or "dense"
-
-```--adj_type```: for node-node adjency set to "h" and for node-edge set "i"
-
-This script first downloads the raw QM9 dataset from https://s3-us-west-1.amazonaws.com/deepchem.io/datasets/molnet_publish/qm9.zip and stores the processed dataset that contains all the adjacecny and node/edge features under data directory.
 
 # Training and Evaluation
 
