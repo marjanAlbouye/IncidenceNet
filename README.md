@@ -1,5 +1,5 @@
 # Incidence Networks for Geometric Deep Learning
-This is a pytorch implementation of "Incidence Networks for Geometric Deep Learning" paper. (Accepted to ICML 2020) 
+This is a pytorch implementation of "Incidence Networks for Geometric Deep Learning" paper. 
 Link to paper: https://arxiv.org/pdf/1905.11460.pdf
 
 # Requirements:
